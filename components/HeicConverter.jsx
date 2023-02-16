@@ -1,37 +1,33 @@
-import { useState } from "react";
-import heic2any from "heic-convert";
-import Image from "next/image";
+import React, { useState } from 'react'
+import { convertHeicToJpeg } from 'util/heic-conversion'
 
-export default function HEICtoJPEGConverter() {
-  const [previewImage, setPreviewImage] = useState("");
-  const [convertedFile, setConvertedFile] = useState("");
+const HeicConverter = () => {
+  const [files, setFiles] = useState([])
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (file.type === "image/heic") {
-      const converted = await heic2any({
-        blob: file,
-        toType: "image/jpeg",
-      });
-      setConvertedFile(new File([converted], `${file.name}.jpeg`, { type: "image/jpeg" }));
-      setPreviewImage(URL.createObjectURL(converted));
-    }
-  };
+  const handleFileUpload = (e) => {
+    setFiles(e.target.files)
+  }
 
   const handleDownload = () => {
-    const url = URL.createObjectURL(convertedFile);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", convertedFile.name);
-    document.body.appendChild(link);
-    link.click();
-  };
+    Promise.all(files.map(f => convertHeicToJpeg(f)))
+      .then((jpegData) => {
+        jpegData.forEach((data, i) => {
+          const link = document.createElement('a');
+          link.download = `converted-image${i}.jpg`;
+          link.href = data;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        })
+      })
+  }
 
   return (
     <div>
-      <input type="file" accept="image/*" onChange={handleFileUpload} />
-      {previewImage && <Image src={previewImage} width={400} height={400} />}
-      {convertedFile && <button onClick={handleDownload}>Download</button>}
+      <input type="file" multiple onChange={handleFileUpload} />
+      {files.length > 0 && <button onClick={handleDownload}>Download Converted Images</button>}
     </div>
-  );
+  )
 }
+
+export default HeicConverter
