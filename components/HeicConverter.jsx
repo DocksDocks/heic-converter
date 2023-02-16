@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { convertHeicToJpeg } from 'util/heic-conversion'
+import heic2any from "heic-convert";
 
 const HeicConverter = () => {
   const [files, setFiles] = useState([])
@@ -9,7 +9,13 @@ const HeicConverter = () => {
   }
 
   const handleDownload = () => {
-    Promise.all(files.map(f => convertHeicToJpeg(f)))
+    Promise.all(files.map( async  (f)  => {
+      return converted = await heic2any({
+        blob: f,
+        toType: "image/jpeg",
+      })
+    }
+      ))
       .then((jpegData) => {
         jpegData.forEach((data, i) => {
           const link = document.createElement('a');
